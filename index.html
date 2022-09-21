@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Details</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/4.3.0/firebase.js"></script>
+
+</head>
+
+<body>
+
+    <div id="alertBox" class="alert">
+        <span class="closeButton" onclick="this.parentElement.style.display='none';">&times;</span>
+        No data found!
+    </div>
+
+    <div id="loadingAnimation" class="title-container">
+		<div class="spinner">
+			<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+				<circle cx="50" cy="50" r="46" />
+			</svg>
+		</div>
+    </div>
+
+    <div id="inputBox" class="wrapper">
+        <div class="right">
+            <div class="info">
+                <h3>Student Data</h3>
+                <div class="form">
+                    <input type="text" oninput="this.value = this.value.replace(/[^0-9]/, '')" id="rollNumber" maxlength="13" minlength="12" placeholder="Rollnumber" required />
+                    <input type="date" id="dob" required />
+                    <button id="getDataButton"">Request Details</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dataBox" class="wrapper">
+        <div class="right">
+            <div class="info">
+                <h3>Student Data</h3>
+                <div class="info_data">
+                    <div class="data">
+                        <h4>Full Name</h4>
+                        <p id="nameFromDB">Full Name of the Student</p>
+                    </div>
+                    <div class="data">
+                        <h4>Father's Name</h4>
+                        <p id="fatherNameFromDB">Father's name of the student</p>
+                    </div>
+                </div>
+                <div class="info_data">
+                    <div class="data">
+                        <h4>Degree of the Student</h4>
+                        <p id="degreeFromDB">B-Tech, M-Tech, MCA, PhD</p>
+                    </div>
+                    <div class="data">
+                        <h4>Stutus of Degree</h4>
+                        <p id="statusFromDB">Passed Out/ Persuing</p>
+                    </div>
+                </div>
+                <div class="info_data">
+                    <div class="data">
+                        <h4>Branch/Core</h4>
+                        <p id="branchFromDB">Branch Name</p>
+                    </div>
+                    <div class="data">
+                        <h4>Completetion Year</h4>
+                        <p id="passoutFromDB">2024 (Estimated)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+
+    // Import and Congigurations //
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+    
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBWrpvG7rXDOW-6NNwNkT9Qj4iW0YoAGBI",
+      authDomain: "educational-verification.firebaseapp.com",
+      projectId: "educational-verification",
+      storageBucket: "educational-verification.appspot.com",
+      messagingSenderId: "359968510555",
+      appId: "1:359968510555:web:0fd1dc61c7ad8b57c9257e",
+      measurementId: "G-LLVLJ04ER5"
+    };
+  
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+
+    import {getFirestore, doc, collection, getDoc} from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+
+    const db = getFirestore();
+
+    let rollNumberInput = document.getElementById('rollNumber');
+    let dobInput = document.getElementById('dob');
+
+    let getDataBtn = document.getElementById('getDataButton');
+
+    let name = document.getElementById('nameFromDB');
+    let fatherName = document.getElementById('fatherNameFromDB');
+    let degree = document.getElementById('degreeFromDB');
+    let status = document.getElementById('statusFromDB');
+    let branch = document.getElementById('branchFromDB');
+    let passout = document.getElementById('passoutFromDB');
+    let roll = document.getElementById('rollNumberFromDB');
+    let dob = document.getElementById('dobFromDB');
+
+    let loadingAnimation = document.getElementById('loadingAnimation');
+    let inputBox = document.getElementById('inputBox');
+    let dataBox = document.getElementById('dataBox');
+    let alertBox = document.getElementById('alertBox');
+
+    if (loadingAnimation.style.display !== 'none'){
+        loadingAnimation.style.display = 'none';
+        inputBox.style.display = 'block';
+        dataBox.style.display = 'none';       
+    }
+
+    // Get Data //
+    async function getDocument(){
+
+        loadingAnimation.style.display = 'block';
+        inputBox.style.display = 'none';
+
+        var input1 = rollNumberInput.value;
+        var input2 = dobInput.value.slice(8,10) + dobInput.value.slice(5,7) + dobInput.value.slice(0,4);
+
+        var ref = doc(db, 'StudentData', input1 + '-' + input2);
+        const docSnapShot = await getDoc(ref);
+        if (docSnapShot.exists()){
+            var nameRecieved = docSnapShot.data().Name;
+            var branchRecieved = docSnapShot.data().Branch;
+            var degreeRecieved = docSnapShot.data().Degree;
+            var statusRecieved = docSnapShot.data().Status;
+            var fatherNameRecieved = docSnapShot.data().FatherName;
+            var passoutYearRecieved = docSnapShot.data().CompletionYear;
+
+            name.innerText = nameRecieved;
+            branch.innerText = branchRecieved;
+            status.innerText = statusRecieved;
+            degree.innerText = degreeRecieved;
+            fatherName.innerText = fatherNameRecieved;
+            passout.innerText = passoutYearRecieved;
+
+            loadingAnimation.style.display = 'none';
+            dataBox.style.display = 'block';
+        }
+        else{
+            alertBox.style.display = 'block'; 
+            loadingAnimation.style.display = 'none';
+            inputBox.style.display = 'block';
+        }
+    }
+
+    getDataBtn.addEventListener('click', getDocument);
+
+
+  </script>
+
+</body>
+
+</html>
